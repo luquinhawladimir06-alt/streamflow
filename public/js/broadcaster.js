@@ -3,28 +3,27 @@
  * WebRTC 1:N: O broadcaster cria uma RTCPeerConnection para cada viewer.
  */
 
-// ─── Configuração ICE ──────────────────────────────────────────────────────────
+// ─── Configuração ICE (Anti-Bloqueio) ──────────────────────────────────────────
 const ICE_CONFIG = {
   iceServers: [
+    // STUNs altamentes confiáveis (Google e Cloudflare)
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-    // TURN Gratuito do OpenRelay (resolve 99% dos problemas de conexão de internet no Brasil)
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun.cloudflare.com:3478' },
+    
+    // TURNs para forçar passagem em Firewalls e CGNAT rigorosos
     {
-      urls: 'turn:openrelay.metered.ca:80',
-      username: 'openrelayproject',
-      credential: 'openrelayproject'
-    },
-    {
-      urls: 'turn:openrelay.metered.ca:443',
-      username: 'openrelayproject',
-      credential: 'openrelayproject'
-    },
-    {
-      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+      urls: [
+        'turn:openrelay.metered.ca:80',
+        'turn:openrelay.metered.ca:443',
+        'turn:openrelay.metered.ca:443?transport=tcp' // Imita tráfego HTTPS normal (inbloqueável)
+      ],
       username: 'openrelayproject',
       credential: 'openrelayproject'
     }
-  ]
+  ],
+  iceCandidatePoolSize: 10 // Acelera a descoberta de rotas
 };
 
 // ─── Estado ────────────────────────────────────────────────────────────────────
