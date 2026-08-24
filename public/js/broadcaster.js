@@ -42,6 +42,15 @@ const viewerCountNum   = document.getElementById('viewer-count-num');
 const viewerCountStat  = document.getElementById('viewer-count-stat');
 const durationDisplay  = document.getElementById('duration-display');
 const toastContainer   = document.getElementById('toast-container');
+const qualitySelect    = document.getElementById('quality-select');
+
+// ─── Qualidades Predefinidas ───────────────────────────────────────────────────
+const QUALITY_SETTINGS = {
+  extreme: { width: 1920, height: 1080, fps: 60, maxBitrate: 8000000 }, // 8 Mbps
+  high:    { width: 1920, height: 1080, fps: 30, maxBitrate: 5000000 }, // 5 Mbps
+  normal:  { width: 1280, height: 720,  fps: 30, maxBitrate: 2500000 }  // 2.5 Mbps
+};
+let selectedQuality = QUALITY_SETTINGS.normal;
 
 // ─── Conectar ao servidor ──────────────────────────────────────────────────────
 function initSocket() {
@@ -115,6 +124,20 @@ async function createOfferForViewer(viewerSocketId) {
     pc.addTrack(track, localStream);
   });
 
+  // Forçar Bitrate mais alto (evitar pixels estourados)
+  const senders = pc.getSenders();
+  const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+  if (videoSender) {
+    const params = videoSender.getParameters();
+    if (!params.encodings) params.encodings = [{}];
+    // Injeta o maxBitrate definido pela configuração (em bps)
+    params.encodings[0].maxBitrate = selectedQuality.maxBitrate;
+    // Tenta aplicar as configurações
+    videoSender.setParameters(params).catch(err => {
+      console.warn('[WebRTC] Não foi possível forçar o bitrate:', err);
+    });
+  }
+
   // Enviar ICE candidates ao viewer via servidor
   pc.onicecandidate = ({ candidate }) => {
     if (candidate) {
@@ -167,13 +190,18 @@ async function startBroadcast() {
   startBtn.disabled = true;
   startBtn.textContent = 'Solicitando permissão...';
 
+  // Obter qualidade selecionada
+  const selectedKey = qualitySelect.value;
+  selectedQuality = QUALITY_SETTINGS[selectedKey] || QUALITY_SETTINGS.normal;
+  console.log('[Quality] Configuração selecionada:', selectedKey, selectedQuality);
+
   try {
-    // 1. Capturar tela
+    // 1. Capturar tela com configurações exatas (ideal => forçar o máximo possível sem quebrar)
     localStream = await navigator.mediaDevices.getDisplayMedia({
       video: {
-        width:     { ideal: 1920 },
-        height:    { ideal: 1080 },
-        frameRate: { ideal: 30 }
+        width:     { ideal: selectedQuality.width },
+        height:    { ideal: selectedQuality.height },
+        frameRate: { ideal: selectedQuality.fps }
       },
       audio: true
     });
