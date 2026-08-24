@@ -6,15 +6,24 @@
 // ─── Configuração ICE ──────────────────────────────────────────────────────────
 const ICE_CONFIG = {
   iceServers: [
-    // STUN do Google — funciona para a maioria dos casos
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-    // ↓ Adicione TURN aqui se necessário para usuários atrás de NAT restritivo
-    // {
-    //   urls: 'turn:seu-servidor-turn.com:3478',
-    //   username: 'usuario',
-    //   credential: 'senha'
-    // }
+    // TURN Gratuito do OpenRelay (resolve 99% dos problemas de conexão de internet no Brasil)
+    {
+      urls: 'turn:openrelay.metered.ca:80',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    }
   ]
 };
 
