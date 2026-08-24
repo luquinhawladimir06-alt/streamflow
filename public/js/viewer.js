@@ -97,11 +97,13 @@ function createPeerConnection() {
         remoteVideo.srcObject = event.streams[0];
         console.log('[WebRTC] Stream atribuído ao vídeo');
 
-        // Forçar play — navegadores modernos bloqueiam autoplay sem interação
-        remoteVideo.play().catch(err => {
-          console.warn('[Video] play() bloqueado, aguardando interação:', err);
-          // Mostrar tela mesmo assim para o usuário poder clicar e ativar o play
+        // Forçar play — navegadores bloqueiam autoplay com áudio
+        remoteVideo.play().then(() => {
           showViewer();
+        }).catch(err => {
+          console.warn('[Video] play() bloqueado, mostrando botão de iniciar:', err);
+          showViewer();
+          showPlayOverlay();
         });
       }
     }
@@ -110,7 +112,7 @@ function createPeerConnection() {
   // Mostrar tela assim que o vídeo tiver dados suficientes para tocar
   remoteVideo.onloadedmetadata = () => {
     console.log('[Video] Metadata carregada, iniciando play');
-    remoteVideo.play().catch(() => {});
+    remoteVideo.play().catch(() => { showPlayOverlay(); });
     showViewer();
   };
 
@@ -290,6 +292,48 @@ function showToast(message, type = 'info') {
     toast.style.animation = 'fadeOut 0.3s ease forwards';
     setTimeout(() => toast.remove(), 300);
   }, 4000);
+}
+
+// ─── Botão de Play Overlay (Burlar Autoplay) ──────────────────────────────────
+let overlayCriado = false;
+function showPlayOverlay() {
+  if (overlayCriado) return;
+  overlayCriado = true;
+
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-primary';
+  btn.innerHTML = `
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+    </svg>
+    Clique para assistir
+  `;
+  btn.style.position = 'fixed';
+  btn.style.top = '50%';
+  btn.style.left = '50%';
+  btn.style.transform = 'translate(-50%, -50%)';
+  btn.style.zIndex = '9999';
+  btn.style.boxShadow = '0 0 30px rgba(124, 58, 237, 0.6)';
+  btn.style.padding = '16px 32px';
+  btn.style.fontSize = '1.2rem';
+  
+  // Fundo escuro atrás do botão
+  const bg = document.createElement('div');
+  bg.style.position = 'fixed';
+  bg.style.inset = '0';
+  bg.style.background = 'rgba(0,0,0,0.7)';
+  bg.style.zIndex = '9998';
+  bg.style.display = 'flex';
+  bg.style.alignItems = 'center';
+  bg.style.justifyContent = 'center';
+  
+  bg.appendChild(btn);
+  document.body.appendChild(bg);
+
+  btn.addEventListener('click', () => {
+    remoteVideo.play();
+    bg.remove();
+  });
 }
 
 // ─── Iniciar ───────────────────────────────────────────────────────────────────
