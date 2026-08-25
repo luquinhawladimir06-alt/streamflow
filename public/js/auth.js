@@ -21,6 +21,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           el.src = 'https://cdn.discordapp.com/embed/avatars/0.png';
         }
       });
+
+      // Se for Admin, mostra o botão do painel (se existir na página)
+      if (data.isAdmin) {
+        const adminBtns = document.querySelectorAll('.admin-panel-btn');
+        adminBtns.forEach(btn => btn.style.display = 'flex');
+      }
     } else {
       // Show login buttons, hide profiles
       loginBtns.forEach(btn => btn.style.display = 'flex');
