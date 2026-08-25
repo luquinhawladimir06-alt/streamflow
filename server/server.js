@@ -108,6 +108,27 @@ app.get('/api/admin/stats', (req, res) => {
   res.json(stats);
 });
 
+app.delete('/api/admin/stream/:id', (req, res) => {
+  if (!req.session || !req.session.user || !process.env.ADMIN_DISCORD_ID || req.session.user.id !== process.env.ADMIN_DISCORD_ID) {
+    return res.status(403).json({ error: 'Acesso negado.' });
+  }
+
+  const { id } = req.params;
+  const b = broadcasts.get(id);
+  if (!b) {
+    return res.status(404).json({ error: 'Transmissão não encontrada.' });
+  }
+
+  // Desconecta o socket do broadcaster à força e encerra a live
+  const broadcasterSocket = io.sockets.sockets.get(b.broadcasterSocketId);
+  if (broadcasterSocket) {
+    broadcasterSocket.disconnect(true);
+  }
+  endBroadcast(id, 'kicked-by-admin');
+  
+  res.json({ success: true });
+});
+
 // ─── Estado das transmissões ─────────────────────────────────────────────────
 // Map: streamId → { broadcasterSocketId, broadcasterToken, viewers: Set<socketId> }
 const broadcasts = new Map();

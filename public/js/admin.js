@@ -34,8 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <td style="font-family: monospace; font-size: 1.1rem; color: var(--purple-400);">${s.streamId}</td>
             <td><strong>${s.viewersCount}</strong> assistindo</td>
             <td><span class="status-badge">🟢 Ao Vivo</span></td>
-            <td>
+            <td style="display: flex; gap: 8px;">
               <a href="/live/${s.streamId}" target="_blank" class="btn btn-secondary btn-sm" style="padding: 4px 12px; font-size: 0.8rem;">Assistir</a>
+              <button onclick="kickStream('${s.streamId}')" class="btn btn-sm" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 4px 12px; font-size: 0.8rem; cursor: pointer; border-radius: 6px;">Derrubar</button>
             </td>
           `;
           streamsTbody.appendChild(tr);
@@ -54,3 +55,19 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchStats();
   setInterval(fetchStats, 5000);
 });
+
+// Função global para derrubar live
+window.kickStream = async function(streamId) {
+  if (!confirm(`Tem certeza que deseja DERRUBAR a transmissão ${streamId}?`)) return;
+
+  try {
+    const res = await fetch(`/api/admin/stream/${streamId}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert('Transmissão derrubada com sucesso!');
+    } else {
+      alert('Erro ao tentar derrubar a transmissão.');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
