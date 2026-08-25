@@ -12,12 +12,12 @@ const ICE_CONFIG = {
     { urls: 'stun:stun.cloudflare.com:3478' },
     {
       urls: [
-        'turn:openrelay.metered.ca:80',
-        'turn:openrelay.metered.ca:443',
-        'turn:openrelay.metered.ca:443?transport=tcp'
+        'turn:paradiseflow.metered.live:80',
+        'turn:paradiseflow.metered.live:443',
+        'turn:paradiseflow.metered.live:443?transport=tcp'
       ],
-      username: 'openrelayproject',
-      credential: 'openrelayproject'
+      username: '3146eb217782c75b2b18aa0d',
+      credential: '2KtAX+oDQyvaSH1b'
     }
   ],
   iceCandidatePoolSize: 10

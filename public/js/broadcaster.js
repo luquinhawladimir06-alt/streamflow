@@ -12,15 +12,15 @@ const ICE_CONFIG = {
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:stun.cloudflare.com:3478' },
     
-    // TURNs para forçar passagem em Firewalls e CGNAT rigorosos
+    // TURNs PRIVADOS (Força passagem em qualquer bloqueio)
     {
       urls: [
-        'turn:openrelay.metered.ca:80',
-        'turn:openrelay.metered.ca:443',
-        'turn:openrelay.metered.ca:443?transport=tcp' // Imita tráfego HTTPS normal (inbloqueável)
+        'turn:paradiseflow.metered.live:80',
+        'turn:paradiseflow.metered.live:443',
+        'turn:paradiseflow.metered.live:443?transport=tcp'
       ],
-      username: 'openrelayproject',
-      credential: 'openrelayproject'
+      username: '3146eb217782c75b2b18aa0d',
+      credential: '2KtAX+oDQyvaSH1b'
     }
   ],
   iceCandidatePoolSize: 10 // Acelera a descoberta de rotas
