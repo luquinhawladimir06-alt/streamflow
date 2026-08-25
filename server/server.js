@@ -3,6 +3,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 const crypto = require('crypto');
 const path = require('path');
+const session = require('express-session');
+const axios = require('axios');
 
 const app = express();
 const server = http.createServer(app);
@@ -11,6 +13,74 @@ const io = new Server(server, {
 });
 
 const PORT = process.env.PORT || 3000;
+
+// ─── Sessão ──────────────────────────────────────────────────────────────────
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'streamflow-super-secret-key-xyz123',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 1000 * 60 * 60 * 24 * 7 } // 7 dias
+}));
+
+// ─── Autenticação Discord (OAuth2) ───────────────────────────────────────────
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+// Em produção, isso deve ser a URL do seu site no Railway (ex: https://seu-app.railway.app/auth/discord/callback)
+const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || 'http://localhost:3000/auth/discord/callback';
+
+app.get('/auth/discord', (req, res) => {
+  if (!DISCORD_CLIENT_ID) return res.send('Discord OAuth não configurado pelo administrador.');
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
+  res.redirect(url);
+});
+
+app.get('/auth/discord/callback', async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.redirect('/');
+  
+  try {
+    const params = new URLSearchParams({
+      client_id: DISCORD_CLIENT_ID,
+      client_secret: DISCORD_CLIENT_SECRET,
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: DISCORD_REDIRECT_URI
+    });
+
+    const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', params.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+    
+    const userResponse = await axios.get('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${tokenResponse.data.access_token}` }
+    });
+
+    const u = userResponse.data;
+    req.session.user = {
+      id: u.id,
+      username: u.global_name || u.username,
+      avatar: u.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png` : null
+    };
+
+    res.redirect('/');
+  } catch (err) {
+    console.error('Erro no login Discord:', err.message);
+    res.redirect('/');
+  }
+});
+
+app.get('/auth/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
+
+app.get('/api/user', (req, res) => {
+  if (req.session && req.session.user) {
+    res.json({ loggedIn: true, user: req.session.user });
+  } else {
+    res.json({ loggedIn: false });
+  }
+});
 
 // ─── Estado das transmissões ─────────────────────────────────────────────────
 // Map: streamId → { broadcasterSocketId, broadcasterToken, viewers: Set<socketId> }
