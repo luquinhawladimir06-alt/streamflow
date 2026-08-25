@@ -76,10 +76,36 @@ app.get('/auth/logout', (req, res) => {
 
 app.get('/api/user', (req, res) => {
   if (req.session && req.session.user) {
-    res.json({ loggedIn: true, user: req.session.user });
+    const isAdmin = process.env.ADMIN_DISCORD_ID && req.session.user.id === process.env.ADMIN_DISCORD_ID;
+    res.json({ loggedIn: true, user: req.session.user, isAdmin });
   } else {
-    res.json({ loggedIn: false });
+    res.json({ loggedIn: false, isAdmin: false });
   }
+});
+
+// ─── API do Painel Admin ─────────────────────────────────────────────────────
+app.get('/api/admin/stats', (req, res) => {
+  // Verifica se o usuário está logado e se é o Admin
+  if (!req.session || !req.session.user || !process.env.ADMIN_DISCORD_ID || req.session.user.id !== process.env.ADMIN_DISCORD_ID) {
+    return res.status(403).json({ error: 'Acesso negado. Apenas o dono pode ver as estatísticas.' });
+  }
+
+  // Coletar estatísticas
+  const stats = {
+    totalConnections: io.engine.clientsCount, // total de conexões abertas no servidor
+    activeStreamsCount: broadcasts.size,
+    streams: []
+  };
+
+  broadcasts.forEach((data, streamId) => {
+    stats.streams.push({
+      streamId: streamId,
+      broadcasterSocket: data.broadcasterSocketId,
+      viewersCount: data.viewers.size
+    });
+  });
+
+  res.json(stats);
 });
 
 // ─── Estado das transmissões ─────────────────────────────────────────────────
