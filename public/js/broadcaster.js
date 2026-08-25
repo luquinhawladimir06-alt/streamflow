@@ -21,6 +21,16 @@ const ICE_CONFIG = {
       ],
       username: '3146eb217782c75b2b18aa0d',
       credential: '2KtAX+oDQyvaSH1b'
+    },
+    // TURN Fallback Público Global (Para garantir se o de cima falhar)
+    {
+      urls: [
+        'turn:openrelay.metered.ca:80',
+        'turn:openrelay.metered.ca:443',
+        'turn:openrelay.metered.ca:443?transport=tcp'
+      ],
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
     }
   ],
   iceCandidatePoolSize: 10 // Acelera a descoberta de rotas
@@ -412,3 +422,19 @@ window.addEventListener('beforeunload', (e) => {
 
 // ─── Inicializar ───────────────────────────────────────────────────────────────
 initSocket();
+
+// Suporte para auto-start via Extensão do Chrome
+document.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('auto') === '1') {
+    const q = urlParams.get('quality');
+    if (q && QUALITY_SETTINGS[q]) {
+      qualitySelect.value = q;
+    }
+    
+    // Pequeno atraso para a UI inicializar
+    setTimeout(() => {
+      startBroadcast();
+    }, 500);
+  }
+});

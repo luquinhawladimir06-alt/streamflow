@@ -18,6 +18,15 @@ const ICE_CONFIG = {
       ],
       username: '3146eb217782c75b2b18aa0d',
       credential: '2KtAX+oDQyvaSH1b'
+    },
+    {
+      urls: [
+        'turn:openrelay.metered.ca:80',
+        'turn:openrelay.metered.ca:443',
+        'turn:openrelay.metered.ca:443?transport=tcp'
+      ],
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
     }
   ],
   iceCandidatePoolSize: 10
