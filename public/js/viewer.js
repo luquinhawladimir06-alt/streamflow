@@ -344,3 +344,25 @@ function showPlayOverlay() {
 
 // ─── Iniciar ───────────────────────────────────────────────────────────────────
 connect();
+
+// ─── Controle de Áudio do Espectador ───────────────────────────────────────────
+const muteBtn = document.getElementById('mute-btn');
+const iconUnmuted = document.getElementById('icon-unmuted');
+const iconMuted = document.getElementById('icon-muted');
+
+if (muteBtn && iconUnmuted && iconMuted) {
+  muteBtn.addEventListener('click', () => {
+    remoteVideo.muted = !remoteVideo.muted;
+    if (remoteVideo.muted) {
+      iconUnmuted.style.display = 'none';
+      iconMuted.style.display = 'block';
+      muteBtn.style.background = 'rgba(239, 68, 68, 0.2)'; // Fundo levemente vermelho
+      muteBtn.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+    } else {
+      iconUnmuted.style.display = 'block';
+      iconMuted.style.display = 'none';
+      muteBtn.style.background = 'rgba(0,0,0,0.5)';
+      muteBtn.style.borderColor = 'rgba(255,255,255,0.08)';
+    }
+  });
+}
